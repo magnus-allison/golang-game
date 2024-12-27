@@ -22,6 +22,7 @@ type Player struct{
 	frameIdx int
 	animCounter int
 	invincible bool
+	tintDuration int
 }
 
 func createPlayer() *Player {
@@ -44,13 +45,19 @@ func createPlayer() *Player {
 func (p *Player) draw(screen *ebiten.Image) {
 	frameWidth := 64
 	frameHeight := 64
-	// calculate the cropping rectangle for the current frame
+	// Calculate cropping rect for the current frame
 	frameX := (p.frameIdx % (p.image.Bounds().Dx() / frameWidth)) * frameWidth
 	frameY := (p.frameIdx / (p.image.Bounds().Dx() / frameWidth)) * frameHeight
 	cropRect := image.Rect(frameX, frameY, frameX+frameWidth, frameY+frameHeight)
 
 	frame := p.image.SubImage(cropRect).(*ebiten.Image)
 	opts := &ebiten.DrawImageOptions{}
+
+	if p.tintDuration > 0 {
+		opts.ColorScale.Scale(0.99, 0.222, 0.114, 1)
+		p.tintDuration--
+	}
+
 	scaleX := float64(p.size) / float64(frameWidth)
 	scaleY := float64(p.size) / float64(frameHeight)
 	opts.GeoM.Scale(scaleX, scaleY)
@@ -64,6 +71,7 @@ func (p *Player) update() {
 	const acceleration = 0.5 // How quickly the player accelerates
 	const friction = 0.9     // Slow down when no key is pressed
 
+	// Animation frame
 	const frameRate = 8
 
 	if ebiten.IsKeyPressed(ebiten.KeyW) {
@@ -174,13 +182,13 @@ func (p *Player) takeDamage() {
 	if (p.invincible) {
 		return
 	}
+	p.tintDuration = 30
 	p.hearts--
 	p.invincible = true
 
 	go func() {
-		// Set invincibility duration (e.g., 1 second)
-		time.Sleep(1 * time.Second) // Sleep for 1 second (adjustable)
-		p.invincible = false        // Reset invincibility flag after 1 second
+		time.Sleep(1 * time.Second)
+		p.invincible = false
 	}()
 }
 

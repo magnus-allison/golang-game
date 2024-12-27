@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -31,11 +32,14 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for _, enemy := range g.Enemies {
 		vector.DrawFilledRect(screen, enemy.x, enemy.y, float32(enemy.size), float32(enemy.size), enemy.color, true)
 	}
-	if (ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)) {
-		g.Player.hearts = 2
-	}
 	g.UI.drawPlayerHearts(screen, g.Player.hearts)
-	ebitenutil.DebugPrint(screen, "Hello, World!")
+	if (g.Player.hearts <= 0) {
+		ebitenutil.DebugPrint(screen, "Game Over!")
+		go func() {
+			<-time.After(3 * time.Second)
+			g.Player.hearts = 3
+		}()
+	}
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
