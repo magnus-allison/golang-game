@@ -11,6 +11,7 @@ import (
 type Game struct{
 	Player *Player
 	Enemies []*Enemy
+	UI *UI
 }
 
 var S_WIDTH = 640
@@ -18,6 +19,7 @@ var S_HEIGHT = 480
 
 func (g *Game) Update() error {
 	g.Player.update()
+	g.Player.checkCollision(g.Enemies)
 	for _, enemy := range g.Enemies {
 		enemy.update(g.Player.x, g.Player.y)
 	}
@@ -25,16 +27,14 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	g.Player.checkCollision(g.Enemies)
-	vector.DrawFilledRect(screen, g.Player.x, g.Player.y, float32(g.Player.size), float32(g.Player.size), g.Player.color, true)
+	g.Player.draw(screen)
 	for _, enemy := range g.Enemies {
-		vector.DrawFilledRect(screen, enemy.x, enemy.y, 16, 16, enemy.color, true)
+		vector.DrawFilledRect(screen, enemy.x, enemy.y, float32(enemy.size), float32(enemy.size), enemy.color, true)
 	}
-	// mouse clicked
 	if (ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)) {
 		g.Player.hearts = 2
 	}
-	drawPlayerHearts(screen, g.Player.hearts)
+	g.UI.drawPlayerHearts(screen, g.Player.hearts)
 	ebitenutil.DebugPrint(screen, "Hello, World!")
 }
 
@@ -53,6 +53,7 @@ func main() {
 	if err := ebiten.RunGame(&Game{
 		Player: player,
 		Enemies: enemies[:],
+		UI: createUI(),
 	}); err != nil {
 		log.Fatal(err)
 	}

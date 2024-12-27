@@ -8,6 +8,7 @@ import (
 type Enemy struct {
     x, y     float32
     vx, vy   float32
+	size int
     color    color.RGBA
     isAttacking bool
     isColliding bool
@@ -18,6 +19,7 @@ func createEnemy() *Enemy {
 	return &Enemy{
 		x: randFloat32(0, float32(S_WIDTH)),
 		y: randFloat32(0, float32(S_HEIGHT)),
+		size: 24,
 		color: color.RGBA{0, 255, 55, 255},
 	}
 }
