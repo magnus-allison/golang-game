@@ -1,7 +1,10 @@
 package main
 
 import (
+	"fmt"
+	"image/color"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -13,31 +16,68 @@ type Game struct{
 	Player *Player
 	Enemies []*Enemy
 	UI *UI
+	Projectiles []*Projectile
 }
 
-var S_WIDTH = 640
-var S_HEIGHT = 480
+var S_WIDTH = 1080
+var S_HEIGHT = 720
 
 func (g *Game) Update() error {
-	g.Player.update()
-	g.Player.checkCollision(g.Enemies)
+	p := g.Player
+	p.update()
+	p.checkCollision(g.Enemies)
 	for _, enemy := range g.Enemies {
-		enemy.update(g.Player.x, g.Player.y)
+		enemy.update(p.x, p.y)
 	}
+
+	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+		mx, my := ebiten.CursorPosition()
+		if (p.canShoot) {
+			p.canShoot = false
+			g.Projectiles = append(g.Projectiles, createProjectile(int(p.x) + (p.size / 2), int(p.y) + 20, mx, my))
+			go func() {
+				fmt.Print("can_s")
+				<-time.After(200 * time.Millisecond)
+				p.canShoot = true
+			}()
+		}
+	}
+
+	for i := len(g.Projectiles) - 1; i >= 0; i-- {
+		projectile := g.Projectiles[i]
+		projectile.update()
+		projectile.checkCollision(g.Enemies)
+
+		if projectile.x < 0 || projectile.x > S_WIDTH || projectile.y < 0 || projectile.y > S_HEIGHT {
+			g.Projectiles[i] = g.Projectiles[len(g.Projectiles)-1]
+			g.Projectiles = g.Projectiles[:len(g.Projectiles)-1]
+		}
+	}
+
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	g.Player.draw(screen)
+	p := g.Player
+	vector.DrawFilledRect(screen, 0, 0, float32(S_WIDTH), float32(S_HEIGHT), color.RGBA{22, 33, 43, 255}, true)
+
+	p.draw(screen)
 	for _, enemy := range g.Enemies {
-		vector.DrawFilledRect(screen, enemy.x, enemy.y, float32(enemy.size), float32(enemy.size), enemy.color, true)
+		enemy.draw(screen)
 	}
-	g.UI.drawPlayerHearts(screen, g.Player.hearts)
-	if (g.Player.hearts <= 0) {
-		ebitenutil.DebugPrint(screen, "Game Over!")
+	for _, projectile := range g.Projectiles {
+		lenx := len(g.Projectiles)
+		ebitenutil.DebugPrint(screen, "Entites: " + strconv.Itoa(lenx))
+		projectile.draw(screen)
+	}
+
+	g.UI.drawPlayerHearts(screen, p.hearts)
+	if (p.hearts <= 0) {
+		g.UI.drawGameOverScreen(screen)
 		go func() {
 			<-time.After(3 * time.Second)
-			g.Player.hearts = 3
+			p.respawn()
+			g.Projectiles = []*Projectile{}
 		}()
 	}
 }
@@ -50,6 +90,7 @@ func main() {
 	ebiten.SetWindowSize(S_WIDTH, S_HEIGHT)
 	ebiten.SetWindowTitle("Hello, World!")
 	player := createPlayer()
+	player.respawn()
 	enemies := [10]*Enemy{}
 	for i := range enemies {
 		enemies[i] = createEnemy()
@@ -58,6 +99,7 @@ func main() {
 		Player: player,
 		Enemies: enemies[:],
 		UI: createUI(),
+		Projectiles: []*Projectile{},
 	}); err != nil {
 		log.Fatal(err)
 	}

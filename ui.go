@@ -2,10 +2,12 @@ package main
 
 import (
 	"image"
+	"image/color"
 	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 type UI struct {
@@ -42,4 +44,15 @@ func (ui *UI) drawPlayerHearts(screen *ebiten.Image, amount int) {
 
 		screen.DrawImage(croppedImage, opts)
 	}
+}
+
+func (ui *UI) drawGameOverScreen(screen *ebiten.Image) {
+    // Draw a semi-transparent black background
+    vector.DrawFilledRect(screen, 0, 0, float32(S_WIDTH), float32(S_HEIGHT), color.RGBA{0, 0, 0, 200}, true)
+
+    // Draw the Game Over text in the middle of the screen
+    message := "GAME OVER"
+
+    // textWidth, textHeight := ebitenutil.DebugPrintAt(screen, message, S_WIDTH/2-70, S_HEIGHT/2-20) // Position the text
+    ebitenutil.DebugPrintAt(screen, message, (S_WIDTH/2-len(message)*8/2), (S_HEIGHT/2-20))
 }

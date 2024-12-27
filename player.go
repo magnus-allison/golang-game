@@ -1,8 +1,8 @@
 package main
 
 import (
+	"fmt"
 	"image"
-	"image/color"
 	"log"
 	"time"
 
@@ -11,41 +11,35 @@ import (
 )
 
 type Player struct{
-	x, y   float32
+	x, y float32
 	vx, vy float32
 	size int
-	color color.RGBA
 	isAttacking bool
-	isColliding bool
 	hearts int
 	image *ebiten.Image
-	frameIdx int
-	animCounter int
+	frameIdx, animCounter int
 	invincible bool
 	tintDuration int
+	canShoot bool
 }
 
 func createPlayer() *Player {
-
-	img, _, err := ebitenutil.NewImageFromFile("assets/player.png")
+	img, _, err := ebitenutil.NewImageFromFile("assets/player2.png")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	return &Player{
-		x: 0,
-		y: 0,
-		size: 60,
-		color: color.RGBA{255, 255, 255, 255},
-		hearts: 3,
+		size: 42,
 		image: img,
+		canShoot: true,
 	}
 }
 
 func (p *Player) draw(screen *ebiten.Image) {
-	frameWidth := 64
-	frameHeight := 64
-	// Calculate cropping rect for the current frame
+	frameWidth := 32
+	frameHeight := 32
+	// cropping rect for the current frame
 	frameX := (p.frameIdx % (p.image.Bounds().Dx() / frameWidth)) * frameWidth
 	frameY := (p.frameIdx / (p.image.Bounds().Dx() / frameWidth)) * frameHeight
 	cropRect := image.Rect(frameX, frameY, frameX+frameWidth, frameY+frameHeight)
@@ -67,58 +61,32 @@ func (p *Player) draw(screen *ebiten.Image) {
 
 
 func (p *Player) update() {
-	const speed = 2.0        // Maximum speed
-	const acceleration = 0.5 // How quickly the player accelerates
-	const friction = 0.9     // Slow down when no key is pressed
+	const speed = 1.5 // max speed
+	const acceleration = 0.5
+	const friction = 0.9
 
-	// Animation frame
-	const frameRate = 8
+	// S = 0 - 11
+	// A = 12 - 23
+	// D = 24 - 35
+	// W = 36 - 47
 
-	if ebiten.IsKeyPressed(ebiten.KeyW) {
-		p.animCounter++
-		if p.animCounter >= frameRate {
-			p.frameIdx++
-			if p.frameIdx > 15 { // Cycle between frames 12 and 15
-				p.frameIdx = 12
-			}
-			p.animCounter = 0
-		}
+	if ebiten.IsKeyPressed(ebiten.KeyW) || ebiten.IsKeyPressed(ebiten.KeyUp) {
+		p.animationFrame(36, 47)
 		p.vy -= acceleration
 	}
 
-	if ebiten.IsKeyPressed(ebiten.KeyS) {
-		p.animCounter++
-		if p.animCounter >= frameRate {
-			p.frameIdx++
-			if p.frameIdx > 3 { // Cycle between frames 0 and 3
-				p.frameIdx = 0
-			}
-			p.animCounter = 0
-		}
+	if ebiten.IsKeyPressed(ebiten.KeyS) || ebiten.IsKeyPressed(ebiten.KeyDown) {
+		p.animationFrame(0, 11)
 		p.vy += acceleration
 	}
 
-	if ebiten.IsKeyPressed(ebiten.KeyA) {
-		p.animCounter++
-		if p.animCounter >= frameRate {
-			p.frameIdx++
-			if p.frameIdx > 7 { // Cycle between frames 4 and 7
-				p.frameIdx = 4
-			}
-			p.animCounter = 0
-		}
+	if ebiten.IsKeyPressed(ebiten.KeyA) || ebiten.IsKeyPressed(ebiten.KeyLeft) {
+		p.animationFrame(12, 23)
 		p.vx -= acceleration
 	}
 
-	if ebiten.IsKeyPressed(ebiten.KeyD) {
-		p.animCounter++
-		if p.animCounter >= frameRate {
-			p.frameIdx++
-			if p.frameIdx > 11 { // Cycle between frames 8 and 11
-				p.frameIdx = 8
-			}
-			p.animCounter = 0
-		}
+	if ebiten.IsKeyPressed(ebiten.KeyD) || ebiten.IsKeyPressed(ebiten.KeyRight) {
+		p.animationFrame(24, 35)
 		p.vx += acceleration
 	}
 
@@ -139,7 +107,7 @@ func (p *Player) update() {
 	p.x += p.vx
 	p.y += p.vy
 
-	// Prevent player from moving out of bounds
+	// bound check
 	if p.x < 0 {
 		p.x = 0
 		p.vx = 0
@@ -158,17 +126,29 @@ func (p *Player) update() {
 	if ebiten.IsKeyPressed(ebiten.KeySpace) {
 		p.attack()
 	}
+
+}
+
+func (p *Player) animationFrame(start int, end int) {
+	const frameRate = 8
+	if (p.frameIdx < start || p.frameIdx > end) {
+		p.frameIdx = start
+	}
+	p.animCounter++
+	if p.animCounter >= frameRate {
+		p.frameIdx++
+		if p.frameIdx > end { p.frameIdx = start }
+		p.animCounter = 0
+	}
 }
 
 func (p *Player) checkCollision(enemies []*Enemy) {
 	for _, enemy := range enemies {
-		// Calculate the bounding box for both the player and the enemy
 		playerRight := p.x + float32(p.size)
 		playerBottom := p.y + float32(p.size)
 		enemyRight := enemy.x + float32(enemy.size)
 		enemyBottom := enemy.y + float32(enemy.size)
 
-		// Check for intersection between the player's and enemy's bounding boxes
 		if p.x < enemyRight && playerRight > enemy.x && p.y < enemyBottom && playerBottom > enemy.y {
 			enemy.isColliding = true
 			p.takeDamage()
@@ -194,10 +174,20 @@ func (p *Player) takeDamage() {
 
 func (p *Player) attack() {
 	p.isAttacking = true
-	p.color = color.RGBA{255, 0, 0, 255}
 	go func() {
 		<-time.After(200 * time.Millisecond)
 		p.isAttacking = false
-		p.color = color.RGBA{255, 255, 255, 255}
+	}()
+}
+
+func (p *Player) respawn() {
+	p.hearts = 5
+	fmt.Println("respawning")
+	p.invincible = true
+	p.x = randFloat32(0, float32(S_WIDTH))
+	p.y = randFloat32(0, float32(S_HEIGHT))
+	go func() {
+		<-time.After(1 * time.Second)
+		p.invincible = false
 	}()
 }
