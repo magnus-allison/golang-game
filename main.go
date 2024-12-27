@@ -1,15 +1,12 @@
 package main
 
 import (
-	"fmt"
-	"image/color"
 	"log"
 	"strconv"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 type Game struct{
@@ -17,6 +14,7 @@ type Game struct{
 	Enemies []*Enemy
 	UI *UI
 	Projectiles []*Projectile
+	Level *Level
 }
 
 var S_WIDTH = 1080
@@ -36,7 +34,7 @@ func (g *Game) Update() error {
 			p.canShoot = false
 			g.Projectiles = append(g.Projectiles, createProjectile(int(p.x) + (p.size / 2), int(p.y) + 20, mx, my))
 			go func() {
-				fmt.Print("can_s")
+				// fmt.Print("can_s")
 				<-time.After(200 * time.Millisecond)
 				p.canShoot = true
 			}()
@@ -53,14 +51,12 @@ func (g *Game) Update() error {
 			g.Projectiles = g.Projectiles[:len(g.Projectiles)-1]
 		}
 	}
-
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	p := g.Player
-	vector.DrawFilledRect(screen, 0, 0, float32(S_WIDTH), float32(S_HEIGHT), color.RGBA{22, 33, 43, 255}, true)
-
+	g.Level.drawFloor(screen)
 	p.draw(screen)
 	for _, enemy := range g.Enemies {
 		enemy.draw(screen)
@@ -100,6 +96,7 @@ func main() {
 		Enemies: enemies[:],
 		UI: createUI(),
 		Projectiles: []*Projectile{},
+		Level: createLevelOne(),
 	}); err != nil {
 		log.Fatal(err)
 	}

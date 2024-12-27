@@ -17,6 +17,7 @@ type Enemy struct {
     isColliding bool
 	frameIdx int
 	hp int
+	tintDuration int
 }
 
 
@@ -56,6 +57,11 @@ func (e *Enemy) draw(screen *ebiten.Image) {
 		opts.ColorScale.Scale(0.1, 0.722, 0.114, 1)
 	}
 
+	if e.tintDuration > 0 {
+		opts.ColorScale.Scale(0.99, 0.222, 0.114, 1)
+		e.tintDuration--
+	}
+
 	opts.GeoM.Scale(scaleX, scaleY)
 	opts.GeoM.Translate(float64(e.x), float64(e.y))
 
@@ -64,19 +70,23 @@ func (e *Enemy) draw(screen *ebiten.Image) {
 
 func (e *Enemy) update(playerX, playerY float32) {
 
+	const friction = 0.95
+
 	if (e.hp <= 0) {
 		e.x = randFloat32(0, float32(S_WIDTH))
 		e.y = randFloat32(0, float32(S_HEIGHT))
 		e.hp = 10
 	}
 
-	if randFloat32(0, 1) < 0.01 { // Reduced chance (1%)
+	// chance to move randomly
+	chance := randFloat32(0, 1)
+	if randFloat32(0, 1) < chance {
 		e.vx = randFloat32(-0.5, 0.5) // Smaller movement range
 		e.vy = randFloat32(-0.5, 0.5)
 	}
 
 	// Add some goal-seeking behavior toward the player with reduced frequency and intensity
-	if randFloat32(0, 1) < 0.05 { // Reduced frequency (5% chance)
+	if randFloat32(0, 1) < 0.25 { // Reduced frequency (5% chance)
 		dx := playerX - e.x
 		dy := playerY - e.y
 		mag := float32(math.Sqrt(float64(dx*dx + dy*dy)))
@@ -87,11 +97,13 @@ func (e *Enemy) update(playerX, playerY float32) {
 		}
 	}
 
-	// Update position
+	e.vx *= friction
+	e.vy *= friction
+
+	// pos
 	e.x += e.vx
 	e.y += e.vy
 
-	// Boundary check to prevent moving out of screen
 	if e.x < 0 {
 		e.x = 0
 		e.vx = -e.vx
@@ -107,4 +119,13 @@ func (e *Enemy) update(playerX, playerY float32) {
 		e.y = float32(S_HEIGHT - 16)
 		e.vy = -e.vy
 	}
+}
+
+// apply velocity to position from damage source
+func (e *Enemy) takeDamage(vx, vy float32) {
+	e.hp--
+	// apply a little knockback
+	e.vx += vx
+	e.vy += vy
+	e.tintDuration = 5
 }

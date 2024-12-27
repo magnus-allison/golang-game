@@ -17,24 +17,25 @@ type Projectile struct {
 }
 
 func createProjectile(ox, oy, tx, ty int) *Projectile {
-	// Create the projectile and calculate direction
+	// Create the projectile and initialize basic attributes
 	p := &Projectile{
-		size: 5,
+		size:  5,
 		color: color.RGBA{255, 255, 255, 255},
-		x: ox,
-		y: oy,
-		tx: tx,
-		ty: ty,
+		x:     ox,
+		y:     oy,
+		tx:    tx,
+		ty:    ty,
 	}
 
+	// CHATGPT - Calculate direction vector
 	dx := float32(tx - ox)
 	dy := float32(ty - oy)
-
-	// GhatGPT - Normalize the direction vector
 	dist := float32(math.Sqrt(float64(dx*dx + dy*dy)))
 	if dist > 0 {
-		p.vx = dx / dist
-		p.vy = dy / dist
+		// Normalize and apply a constant speed
+		const speed = 1.0
+		p.vx = dx / dist * speed // Velocity in the x direction
+		p.vy = dy / dist * speed // Velocity in the y direction
 	}
 
 	return p
@@ -49,13 +50,12 @@ func (p *Projectile) update() {
 func (p *Projectile) checkCollision(enemies []*Enemy) {
 	for _, e := range enemies {
 		if float32(p.x) > e.x && float32(p.x) < e.x+float32(e.size) && float32(p.y) > e.y && float32(p.y) < e.y+float32(e.size) {
-			e.hp--
+			e.takeDamage(p.vx * 0.4, p.vy * 0.4)
 			p.x = -100
 			p.y = -100
 		}
 	}
 }
-
 
 func (p *Projectile) draw(screen *ebiten.Image) {
 	vector.DrawFilledCircle(screen, float32(p.x), float32(p.y), float32(p.size), p.color, true)

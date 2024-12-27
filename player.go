@@ -90,6 +90,10 @@ func (p *Player) update() {
 		p.vx += acceleration
 	}
 
+	if !ebiten.IsKeyPressed(ebiten.KeyW) && !ebiten.IsKeyPressed(ebiten.KeyS) && !ebiten.IsKeyPressed(ebiten.KeyA) && !ebiten.IsKeyPressed(ebiten.KeyD) {
+		p.frameIdx = 0
+	}
+
 	p.vx *= friction
 	p.vy *= friction
 
@@ -126,7 +130,6 @@ func (p *Player) update() {
 	if ebiten.IsKeyPressed(ebiten.KeySpace) {
 		p.attack()
 	}
-
 }
 
 func (p *Player) animationFrame(start int, end int) {
