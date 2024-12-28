@@ -58,5 +58,9 @@ func (p *Projectile) checkCollision(enemies []*Enemy) {
 }
 
 func (p *Projectile) draw(screen *ebiten.Image) {
-	vector.DrawFilledCircle(screen, float32(p.x), float32(p.y), float32(p.size), p.color, true)
+
+	// draw outline
+	vector.DrawFilledCircle(screen, float32(p.x), float32(p.y), float32(p.size), color.RGBA{0, 0, 0, 255}, true)
+	// draw inner circle
+	vector.DrawFilledCircle(screen, float32(p.x), float32(p.y), float32(p.size-2), p.color, true)
 }

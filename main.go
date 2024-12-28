@@ -2,23 +2,23 @@ package main
 
 import (
 	"log"
-	"strconv"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+
+	"golang-game/config"
+	"golang-game/levels"
+	"golang-game/ui"
 )
 
 type Game struct{
+	State GameState
 	Player *Player
 	Enemies []*Enemy
-	UI *UI
+	UI *ui.UI
 	Projectiles []*Projectile
-	Level *Level
+	LevelManager *levels.LevelManager
 }
-
-var S_WIDTH = 1080
-var S_HEIGHT = 720
 
 func (g *Game) Update() error {
 	p := g.Player
@@ -46,30 +46,36 @@ func (g *Game) Update() error {
 		projectile.update()
 		projectile.checkCollision(g.Enemies)
 
-		if projectile.x < 0 || projectile.x > S_WIDTH || projectile.y < 0 || projectile.y > S_HEIGHT {
+		// cleanup
+		if projectile.x < 0 || projectile.x > config.S_WIDTH || projectile.y < 0 || projectile.y > config.S_HEIGHT {
 			g.Projectiles[i] = g.Projectiles[len(g.Projectiles)-1]
 			g.Projectiles = g.Projectiles[:len(g.Projectiles)-1]
 		}
 	}
+
+	g.State.CheckDeadEnemies(g.Enemies)
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	p := g.Player
-	g.Level.drawFloor(screen)
+	g.LevelManager.Level.DrawFloor(screen)
 	p.draw(screen)
 	for _, enemy := range g.Enemies {
 		enemy.draw(screen)
 	}
 	for _, projectile := range g.Projectiles {
-		lenx := len(g.Projectiles)
-		ebitenutil.DebugPrint(screen, "Entites: " + strconv.Itoa(lenx))
+		// lenx := len(g.Projectiles)
+		// ebitenutil.DebugPrint(screen, "Entites: " + strconv.Itoa(lenx))
 		projectile.draw(screen)
 	}
 
-	g.UI.drawPlayerHearts(screen, p.hearts)
+	g.UI.DrawPlayerHearts(screen, p.hearts)
+	g.UI.DrawPlayerScore(screen, g.State.GetScore())
+	g.UI.DrawCursor(screen)
+
 	if (p.hearts <= 0) {
-		g.UI.drawGameOverScreen(screen)
+		g.UI.DrawGameOverScreen(screen)
 		go func() {
 			<-time.After(3 * time.Second)
 			p.respawn()
@@ -79,12 +85,13 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return S_WIDTH, S_HEIGHT
+	return config.S_WIDTH, config.S_HEIGHT
 }
 
 func main() {
-	ebiten.SetWindowSize(S_WIDTH, S_HEIGHT)
+	ebiten.SetWindowSize(config.S_WIDTH, config.S_HEIGHT)
 	ebiten.SetWindowTitle("Hello, World!")
+	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	player := createPlayer()
 	player.respawn()
 	enemies := [10]*Enemy{}
@@ -92,11 +99,12 @@ func main() {
 		enemies[i] = createEnemy()
 	}
 	if err := ebiten.RunGame(&Game{
+		State: GameState{},
 		Player: player,
 		Enemies: enemies[:],
-		UI: createUI(),
+		UI: ui.CreateUI(),
 		Projectiles: []*Projectile{},
-		Level: createLevelOne(),
+		LevelManager: levels.CreateLevelManager(),
 	}); err != nil {
 		log.Fatal(err)
 	}

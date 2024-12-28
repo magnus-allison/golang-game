@@ -1,6 +1,7 @@
 package main
 
 import (
+	"golang-game/config"
 	"math/rand"
 )
 
@@ -13,5 +14,5 @@ func randFloat32(min, max float32) float32 {
 }
 
 func randomPosition() (float32, float32) {
-	return randFloat32(0, float32(S_WIDTH)), randFloat32(0, float32(S_HEIGHT))
+	return randFloat32(0, float32(config.S_WIDTH)), randFloat32(0, float32(config.S_HEIGHT))
 }

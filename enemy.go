@@ -7,6 +7,8 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+
+	"golang-game/config"
 )
 
 type Enemy struct {
@@ -29,11 +31,11 @@ func createEnemy() *Enemy {
 	}
 
 	return &Enemy{
-		x: randFloat32(0, float32(S_WIDTH)),
-		y: randFloat32(0, float32(S_HEIGHT)),
+		x: randFloat32(0, float32(config.S_WIDTH)),
+		y: randFloat32(0, float32(config.S_HEIGHT)),
 		size: 42,
 		image: img,
-		hp: 10,
+		hp: 5,
 	}
 }
 
@@ -72,12 +74,6 @@ func (e *Enemy) update(playerX, playerY float32) {
 
 	const friction = 0.95
 
-	if (e.hp <= 0) {
-		e.x = randFloat32(0, float32(S_WIDTH))
-		e.y = randFloat32(0, float32(S_HEIGHT))
-		e.hp = 10
-	}
-
 	// chance to move randomly
 	chance := randFloat32(0, 1)
 	if randFloat32(0, 1) < chance {
@@ -107,16 +103,16 @@ func (e *Enemy) update(playerX, playerY float32) {
 	if e.x < 0 {
 		e.x = 0
 		e.vx = -e.vx
-	} else if e.x > float32(S_WIDTH-16) {
-		e.x = float32(S_WIDTH - 16)
+	} else if e.x > float32(config.S_WIDTH-16) {
+		e.x = float32(config.S_WIDTH - 16)
 		e.vx = -e.vx
 	}
 
 	if e.y < 0 {
 		e.y = 0
 		e.vy = -e.vy
-	} else if e.y > float32(S_HEIGHT-16) {
-		e.y = float32(S_HEIGHT - 16)
+	} else if e.y > float32(config.S_HEIGHT-16) {
+		e.y = float32(config.S_HEIGHT - 16)
 		e.vy = -e.vy
 	}
 }

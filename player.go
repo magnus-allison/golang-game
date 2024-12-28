@@ -8,6 +8,8 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+
+	"golang-game/config"
 )
 
 type Player struct{
@@ -115,15 +117,15 @@ func (p *Player) update() {
 	if p.x < 0 {
 		p.x = 0
 		p.vx = 0
-	} else if p.x > float32(S_WIDTH - p.size) {
-		p.x = float32(S_WIDTH - p.size)
+	} else if p.x > float32(config.S_WIDTH - p.size) {
+		p.x = float32(config.S_WIDTH - p.size)
 		p.vx = 0
 	}
 	if p.y < 0 {
 		p.y = 0
 		p.vy = 0
-	} else if p.y > float32(S_HEIGHT-p.size) {
-		p.y = float32(S_HEIGHT - p.size)
+	} else if p.y > float32(config.S_HEIGHT-p.size) {
+		p.y = float32(config.S_HEIGHT - p.size)
 		p.vy = 0
 	}
 
@@ -187,8 +189,8 @@ func (p *Player) respawn() {
 	p.hearts = 5
 	fmt.Println("respawning")
 	p.invincible = true
-	p.x = randFloat32(0, float32(S_WIDTH))
-	p.y = randFloat32(0, float32(S_HEIGHT))
+	p.x = randFloat32(0, float32(config.S_WIDTH))
+	p.y = randFloat32(0, float32(config.S_HEIGHT))
 	go func() {
 		<-time.After(1 * time.Second)
 		p.invincible = false

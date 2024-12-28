@@ -1,4 +1,4 @@
-package main
+package levels
 
 import (
 	"log"
@@ -6,6 +6,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 
+	"golang-game/config"
 	_ "image/jpeg"
 )
 
@@ -26,13 +27,13 @@ func createLevelOne() *Level {
 	}
 }
 
-func (p *Level) drawFloor(screen *ebiten.Image) {
+func (p *Level) DrawFloor(screen *ebiten.Image) {
 
 	opts := &ebiten.DrawImageOptions{}
 
 	// scale to fit the screen
-	scaleX := float64(S_WIDTH) / float64(p.image.Bounds().Dx())
-	scaleY := float64(S_HEIGHT) / float64(p.image.Bounds().Dy())
+	scaleX := float64(config.S_WIDTH) / float64(p.image.Bounds().Dx())
+	scaleY := float64(config.S_HEIGHT) / float64(p.image.Bounds().Dy())
 	opts.GeoM.Scale(scaleX, scaleY)
 	// apply mask
 	opts.ColorScale.Scale(0.32, 0.2, 0.2, 0.7)
