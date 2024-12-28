@@ -1,4 +1,4 @@
-package main
+package entities
 
 import (
 	"image/color"
@@ -16,7 +16,7 @@ type Projectile struct {
 	color   color.RGBA
 }
 
-func createProjectile(ox, oy, tx, ty int) *Projectile {
+func createProjectile(ox, oy, tx, ty int, speedModifier float32) *Projectile {
 	// Create the projectile and initialize basic attributes
 	p := &Projectile{
 		size:  5,
@@ -33,7 +33,7 @@ func createProjectile(ox, oy, tx, ty int) *Projectile {
 	dist := float32(math.Sqrt(float64(dx*dx + dy*dy)))
 	if dist > 0 {
 		// Normalize and apply a constant speed
-		const speed = 1.0
+		var speed = 1.0 * speedModifier
 		p.vx = dx / dist * speed // Velocity in the x direction
 		p.vy = dy / dist * speed // Velocity in the y direction
 	}
@@ -45,6 +45,11 @@ func (p *Projectile) update() {
 	const speed = 7.0
 	p.x += int(p.vx * speed)
 	p.y += int(p.vy * speed)
+
+		// for i := len(g.Projectiles) - 1; i >= 0; i-- {
+		// 	projectile := g.Projectiles[i]
+		// 	projectile.update()
+		// 	projectile.checkCollision(g.EntityManager.Enemies)
 }
 
 func (p *Projectile) checkCollision(enemies []*Enemy) {
@@ -60,7 +65,7 @@ func (p *Projectile) checkCollision(enemies []*Enemy) {
 func (p *Projectile) draw(screen *ebiten.Image) {
 
 	// draw outline
-	vector.DrawFilledCircle(screen, float32(p.x), float32(p.y), float32(p.size), color.RGBA{0, 0, 0, 255}, true)
+	vector.DrawFilledCircle(screen, float32(p.x), float32(p.y), float32(p.size+2), color.RGBA{0, 0, 0, 255}, true)
 	// draw inner circle
-	vector.DrawFilledCircle(screen, float32(p.x), float32(p.y), float32(p.size-2), p.color, true)
+	vector.DrawFilledCircle(screen, float32(p.x), float32(p.y), float32(p.size), p.color, true)
 }

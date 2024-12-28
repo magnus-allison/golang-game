@@ -1,4 +1,4 @@
-package main
+package entities
 
 import (
 	"image"
@@ -9,6 +9,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 
 	"golang-game/config"
+	"golang-game/utils"
 )
 
 type Enemy struct {
@@ -16,14 +17,13 @@ type Enemy struct {
     vx, vy   float32
 	size int
 	image *ebiten.Image
-    isColliding bool
 	frameIdx int
 	hp int
 	tintDuration int
 }
 
 
-func createEnemy() *Enemy {
+func CreateEnemy() *Enemy {
 
 	img, _, err := ebitenutil.NewImageFromFile("assets/player2.png")
 	if err != nil {
@@ -31,8 +31,8 @@ func createEnemy() *Enemy {
 	}
 
 	return &Enemy{
-		x: randFloat32(0, float32(config.S_WIDTH)),
-		y: randFloat32(0, float32(config.S_HEIGHT)),
+		x: utils.RandFloat32(0, float32(config.S_WIDTH)),
+		y: utils.RandFloat32(0, float32(config.S_HEIGHT)),
 		size: 42,
 		image: img,
 		hp: 5,
@@ -53,11 +53,7 @@ func (e *Enemy) draw(screen *ebiten.Image) {
 	scaleX := float64(e.size) / float64(frameWidth)
 	scaleY := float64(e.size) / float64(frameHeight)
 
-	if e.isColliding {
-		opts.ColorScale.Scale(0.2, 0.822, 0.814, 1)
-	} else {
-		opts.ColorScale.Scale(0.1, 0.722, 0.114, 1)
-	}
+	opts.ColorScale.Scale(0.1, 0.622, 0.414, 0.5)
 
 	if e.tintDuration > 0 {
 		opts.ColorScale.Scale(0.99, 0.222, 0.114, 1)
@@ -70,19 +66,22 @@ func (e *Enemy) draw(screen *ebiten.Image) {
 	screen.DrawImage(frame, opts)
 }
 
-func (e *Enemy) update(playerX, playerY float32) {
+func (e *Enemy) update(player *Player) {
+
+	playerX := player.X
+	playerY := player.Y
 
 	const friction = 0.95
 
 	// chance to move randomly
-	chance := randFloat32(0, 1)
-	if randFloat32(0, 1) < chance {
-		e.vx = randFloat32(-0.5, 0.5) // Smaller movement range
-		e.vy = randFloat32(-0.5, 0.5)
+	chance := utils.RandFloat32(0, 1)
+	if utils.RandFloat32(0, 1) < chance {
+		e.vx = utils.RandFloat32(-0.5, 0.5) // Smaller movement range
+		e.vy = utils.RandFloat32(-0.5, 0.5)
 	}
 
 	// Add some goal-seeking behavior toward the player with reduced frequency and intensity
-	if randFloat32(0, 1) < 0.25 { // Reduced frequency (5% chance)
+	if utils.RandFloat32(0, 1) < 0.25 { // Reduced frequency (5% chance)
 		dx := playerX - e.x
 		dy := playerY - e.y
 		mag := float32(math.Sqrt(float64(dx*dx + dy*dy)))

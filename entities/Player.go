@@ -1,44 +1,49 @@
-package main
+package entities
 
 import (
 	"fmt"
 	"image"
 	"log"
+	"reflect"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 
 	"golang-game/config"
+	"golang-game/utils"
 )
 
 type Player struct{
-	x, y float32
+	X, Y float32
 	vx, vy float32
-	size int
+	Size int
 	isAttacking bool
-	hearts int
+	Hearts int
 	image *ebiten.Image
 	frameIdx, animCounter int
 	invincible bool
 	tintDuration int
 	canShoot bool
+	isShooting bool
+	walkSpeed float32
 }
 
-func createPlayer() *Player {
+func CreatePlayer() *Player {
 	img, _, err := ebitenutil.NewImageFromFile("assets/player2.png")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	return &Player{
-		size: 42,
+		Size: 42,
 		image: img,
 		canShoot: true,
+		walkSpeed: 1.5,
 	}
 }
 
-func (p *Player) draw(screen *ebiten.Image) {
+func (p *Player) Draw(screen *ebiten.Image) {
 	frameWidth := 32
 	frameHeight := 32
 	// cropping rect for the current frame
@@ -54,16 +59,15 @@ func (p *Player) draw(screen *ebiten.Image) {
 		p.tintDuration--
 	}
 
-	scaleX := float64(p.size) / float64(frameWidth)
-	scaleY := float64(p.size) / float64(frameHeight)
+	scaleX := float64(p.Size) / float64(frameWidth)
+	scaleY := float64(p.Size) / float64(frameHeight)
 	opts.GeoM.Scale(scaleX, scaleY)
-	opts.GeoM.Translate(float64(p.x), float64(p.y))
+	opts.GeoM.Translate(float64(p.X), float64(p.Y))
 	screen.DrawImage(frame, opts)
 }
 
 
-func (p *Player) update() {
-	const speed = 1.5 // max speed
+func (p *Player) Update() {
 	const acceleration = 0.5
 	const friction = 0.9
 
@@ -99,38 +103,45 @@ func (p *Player) update() {
 	p.vx *= friction
 	p.vy *= friction
 
-	if p.vx > speed {
-		p.vx = speed
-	} else if p.vx < -speed {
-		p.vx = -speed
+	if p.vx > p.walkSpeed {
+		p.vx = p.walkSpeed
+	} else if p.vx < -p.walkSpeed {
+		p.vx = -p.walkSpeed
 	}
-	if p.vy > speed {
-		p.vy = speed
-	} else if p.vy < -speed {
-		p.vy = -speed
+	if p.vy > p.walkSpeed {
+		p.vy = p.walkSpeed
+	} else if p.vy < -p.walkSpeed {
+		p.vy = -p.walkSpeed
 	}
 
-	p.x += p.vx
-	p.y += p.vy
+	p.X += p.vx
+	p.Y += p.vy
 
 	// bound check
-	if p.x < 0 {
-		p.x = 0
+	if p.X < 0 {
+		p.X = 0
 		p.vx = 0
-	} else if p.x > float32(config.S_WIDTH - p.size) {
-		p.x = float32(config.S_WIDTH - p.size)
+	} else if p.X > float32(config.S_WIDTH - p.Size) {
+		p.X = float32(config.S_WIDTH - p.Size)
 		p.vx = 0
 	}
-	if p.y < 0 {
-		p.y = 0
+	if p.Y < 0 {
+		p.Y = 0
 		p.vy = 0
-	} else if p.y > float32(config.S_HEIGHT-p.size) {
-		p.y = float32(config.S_HEIGHT - p.size)
+	} else if p.Y > float32(config.S_HEIGHT-p.Size) {
+		p.Y = float32(config.S_HEIGHT - p.Size)
 		p.vy = 0
 	}
 
 	if ebiten.IsKeyPressed(ebiten.KeySpace) {
 		p.attack()
+	}
+
+	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+		p.isShooting = true
+		p.shoot()
+	} else {
+		p.isShooting = false
 	}
 }
 
@@ -147,19 +158,23 @@ func (p *Player) animationFrame(start int, end int) {
 	}
 }
 
-func (p *Player) checkCollision(enemies []*Enemy) {
-	for _, enemy := range enemies {
-		playerRight := p.x + float32(p.size)
-		playerBottom := p.y + float32(p.size)
-		enemyRight := enemy.x + float32(enemy.size)
-		enemyBottom := enemy.y + float32(enemy.size)
-
-		if p.x < enemyRight && playerRight > enemy.x && p.y < enemyBottom && playerBottom > enemy.y {
-			enemy.isColliding = true
-			p.takeDamage()
-		} else {
-			enemy.isColliding = false
+func (p *Player) CheckCollision(entities interface{}) {
+	switch e := entities.(type) {
+	case []*Enemy:
+		for _, enemy := range e {
+			if utils.Collides(p.X, p.Y, float32(p.Size), float32(p.Size), enemy.x, enemy.y, float32(enemy.size), float32(enemy.size)) {
+				p.takeDamage()
+			}
 		}
+	case []*PowerUp:
+		for _, powerUp := range e {
+			if utils.Collides(p.X, p.Y, float32(p.Size), float32(p.Size), powerUp.x, powerUp.y, float32(powerUp.size), float32(powerUp.size)) {
+				p.powerUp()
+				powerUp.x, powerUp.y = utils.RandomPosition()
+			}
+		}
+	default:
+		fmt.Println("Unknown type ", reflect.TypeOf(entities))
 	}
 }
 
@@ -168,7 +183,7 @@ func (p *Player) takeDamage() {
 		return
 	}
 	p.tintDuration = 30
-	p.hearts--
+	p.Hearts--
 	p.invincible = true
 
 	go func() {
@@ -185,14 +200,28 @@ func (p *Player) attack() {
 	}()
 }
 
-func (p *Player) respawn() {
-	p.hearts = 5
-	fmt.Println("respawning")
+func (p *Player) Respawn() {
+	p.Hearts = 5
 	p.invincible = true
-	p.x = randFloat32(0, float32(config.S_WIDTH))
-	p.y = randFloat32(0, float32(config.S_HEIGHT))
+	p.X = utils.RandFloat32(0, float32(config.S_WIDTH))
+	p.Y = utils.RandFloat32(0, float32(config.S_HEIGHT))
 	go func() {
 		<-time.After(1 * time.Second)
 		p.invincible = false
 	}()
+}
+
+func (p *Player) powerUp() {
+	p.Hearts++
+	p.walkSpeed += 0.03
+}
+
+func (p *Player) shoot() {
+	if (p.canShoot) {
+		p.canShoot = false
+		go func() {
+			<-time.After(200 * time.Millisecond)
+			p.canShoot = true
+		}()
+	}
 }
