@@ -1,8 +1,6 @@
 package enemies
 
 import (
-	"golang-game/config"
-	"golang-game/utils"
 	"log"
 
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -15,19 +13,26 @@ type ZombieBoss struct {
 }
 
 func CreateZombieBoss() *Zombie {
-	img, _, err := ebitenutil.NewImageFromFile("assets/player2.png")
+	img, _, err := ebitenutil.NewImageFromFile("assets/goblinbozz.png")
 	if err != nil {
 		log.Fatal(err)
 	}
 	return &Zombie{
-		&Enemy{
-			x: utils.RandFloat32(0, float32(config.S_WIDTH)),
-			y: utils.RandFloat32(0, float32(config.S_HEIGHT)),
-			size: 64,
-			image: img,
-			hp: 5,
-			tintDuration: 0,
-		},
+		CreateEnemy(&EnemyParams{
+			name: "Zombie",
+			w:    100,
+			h:    115,
+			img:  img,
+			hp:   33,
+			frameHeight: 64,
+			frameWidth: 64,
+			WalkMap: &WalkMap{
+				N: []int{4, 7},
+				S: []int{0, 3},
+				E: []int{8, 11},
+				W: []int{12, 15},
+			},
+		}),
 	}
 }
 

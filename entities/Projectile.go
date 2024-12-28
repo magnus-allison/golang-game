@@ -57,8 +57,8 @@ func (p *Projectile) update() {
 func (p *Projectile) checkCollision(enemies []enemies.EnemyInterface) {
 	for _, e := range enemies {
 		eX, eY := e.GetPosition()
-		size := e.GetSize()
-		if utils.Collides(float32(p.x), float32(p.y), float32(p.size), float32(p.size), eX, eY, float32(size), float32(size)) {
+		eW, eH := e.GetSize()
+		if utils.Collides(float32(p.x), float32(p.y), float32(p.size), float32(p.size), eX, eY, float32(eW), float32(eH)) {
 			e.TakeDamage(p.vx * 0.4, p.vy * 0.4)
 			// render offscreen for cleanup
 			p.x = -100

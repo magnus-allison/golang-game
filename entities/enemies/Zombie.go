@@ -4,9 +4,6 @@ import (
 	"log"
 
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-
-	"golang-game/config"
-	"golang-game/utils"
 )
 
 type Zombie struct {
@@ -14,18 +11,25 @@ type Zombie struct {
 }
 
 func CreateZombie() *Zombie {
-	img, _, err := ebitenutil.NewImageFromFile("assets/player2.png")
+	img, _, err := ebitenutil.NewImageFromFile("assets/goblin.png")
 	if err != nil {
 		log.Fatal(err)
 	}
 	return &Zombie{
-		&Enemy{
-			x: utils.RandFloat32(0, float32(config.S_WIDTH)),
-			y: utils.RandFloat32(0, float32(config.S_HEIGHT)),
-			size: 39,
-			image: img,
-			hp: 5,
-			tintDuration: 0,
-		},
+		CreateEnemy(&EnemyParams{
+			name: "Zombie",
+			w:    26,
+			h:    33,
+			img:  img,
+			hp:   5,
+			frameHeight: 64,
+			frameWidth: 64,
+			WalkMap: &WalkMap{
+				N: []int{4, 7},
+				S: []int{0, 3},
+				E: []int{8, 11},
+				W: []int{12, 15},
+			},
+		}),
 	}
 }

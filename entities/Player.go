@@ -168,7 +168,8 @@ func (p *Player) CheckCollision(entities interface{}) {
 	case []enemies.EnemyInterface:
 		for _, enemy := range e {
 			eX, eY := enemy.GetPosition()
-			if utils.Collides(p.X, p.Y, float32(p.Size), float32(p.Size), eX, eY, float32(enemy.GetSize()), float32(enemy.GetSize())) {
+			eW, eH := enemy.GetSize()
+			if utils.Collides(p.X, p.Y, float32(p.Size), float32(p.Size), eX, eY, float32(eW), float32(eH)) {
 				p.takeDamage()
 			}
 		}
