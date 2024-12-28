@@ -27,7 +27,8 @@ func CreateEntityManager() *EntityManager {
 	player.Respawn()
 
 	enemies := []*Enemy{}
-	for i := 0; i < 5; i++ {
+	enemyCount := 12
+	for i := 0; i < enemyCount; i++ {
 		enemies = append(enemies, CreateEnemy())
 	}
 

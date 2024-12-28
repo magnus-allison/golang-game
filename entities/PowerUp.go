@@ -33,8 +33,10 @@ func createPowerUp() *PowerUp {
 }
 
 func (p *PowerUp) update() {
-	// Update the powerup
-	p.rotation += 0.02
+	p.rotation += 0.1
+	if p.rotation >= 360 {
+		p.rotation = 0
+	}
 }
 
 func (p *PowerUp) draw(screen *ebiten.Image) {
