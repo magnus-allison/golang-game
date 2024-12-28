@@ -33,7 +33,7 @@ func CreateEnemy() *Enemy {
 	return &Enemy{
 		x: utils.RandFloat32(0, float32(config.S_WIDTH)),
 		y: utils.RandFloat32(0, float32(config.S_HEIGHT)),
-		size: 42,
+		size: 39,
 		image: img,
 		hp: 5,
 	}
@@ -41,6 +41,10 @@ func CreateEnemy() *Enemy {
 
 
 func (e *Enemy) draw(screen *ebiten.Image) {
+
+	utils.DrawDebugBorder(screen, e.x, e.y, float32(e.size), float32(e.size))
+	if (config.DISABLE_DRAW) { return }
+
 	frameWidth := 32
 	frameHeight := 32
 	// cropping rect for the current frame

@@ -44,6 +44,10 @@ func CreatePlayer() *Player {
 }
 
 func (p *Player) Draw(screen *ebiten.Image) {
+
+	utils.DrawDebugBorder(screen, p.X, p.Y, float32(p.Size), float32(p.Size))
+	if (config.DISABLE_DRAW) { return }
+
 	frameWidth := 32
 	frameHeight := 32
 	// cropping rect for the current frame
@@ -168,7 +172,7 @@ func (p *Player) CheckCollision(entities interface{}) {
 		}
 	case []*PowerUp:
 		for _, powerUp := range e {
-			if utils.Collides(p.X, p.Y, float32(p.Size), float32(p.Size), powerUp.x, powerUp.y, float32(powerUp.size), float32(powerUp.size)) {
+			if utils.Collides(p.X, p.Y, float32(p.Size), float32(p.Size), powerUp.x, powerUp.y, float32(powerUp.w), float32(powerUp.h)) {
 				p.powerUp()
 				powerUp.x, powerUp.y = utils.RandomPosition()
 			}

@@ -1,6 +1,7 @@
 package entities
 
 import (
+	"golang-game/utils"
 	"image/color"
 	"math"
 
@@ -54,8 +55,9 @@ func (p *Projectile) update() {
 
 func (p *Projectile) checkCollision(enemies []*Enemy) {
 	for _, e := range enemies {
-		if float32(p.x) > e.x && float32(p.x) < e.x+float32(e.size) && float32(p.y) > e.y && float32(p.y) < e.y+float32(e.size) {
+		if utils.Collides(float32(p.x), float32(p.y), float32(p.size), float32(p.size), float32(e.x), float32(e.y), float32(e.size), float32(e.size)) {
 			e.takeDamage(p.vx * 0.4, p.vy * 0.4)
+			// render offscreen for cleanup
 			p.x = -100
 			p.y = -100
 		}

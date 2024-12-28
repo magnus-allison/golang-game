@@ -20,7 +20,7 @@ type EntityManager struct {
 func CreateEntityManager() *EntityManager {
 
 	powerUps := []*PowerUp{
-		createPowerUp(100, 100),
+		createPowerUp(),
 	}
 
 	player := CreatePlayer()
@@ -53,6 +53,7 @@ func (em *EntityManager) UpdateEntities() {
 	}
 	for _, p := range em.Projectiles {
 		p.update()
+		p.checkCollision(em.Enemies)
 	}
 
 	em.DeleteProjectiles()
