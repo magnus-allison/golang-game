@@ -1,4 +1,5 @@
 # golang-game
 Just testing out ebitengine in golang
 
-![gif](https://github.com/user-attachments/assets/b1e253b3-ecf6-4bee-8c5e-2496488ab95a)
+![game](https://github.com/user-attachments/assets/7274ae07-4528-4411-a3e6-e04f6a20899d)
+
