@@ -11,6 +11,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 
 	"golang-game/config"
+	"golang-game/entities/enemies"
 	"golang-game/utils"
 )
 
@@ -164,9 +165,10 @@ func (p *Player) animationFrame(start int, end int) {
 
 func (p *Player) CheckCollision(entities interface{}) {
 	switch e := entities.(type) {
-	case []*Enemy:
+	case []enemies.EnemyInterface:
 		for _, enemy := range e {
-			if utils.Collides(p.X, p.Y, float32(p.Size), float32(p.Size), enemy.x, enemy.y, float32(enemy.size), float32(enemy.size)) {
+			eX, eY := enemy.GetPosition()
+			if utils.Collides(p.X, p.Y, float32(p.Size), float32(p.Size), eX, eY, float32(enemy.GetSize()), float32(enemy.GetSize())) {
 				p.takeDamage()
 			}
 		}

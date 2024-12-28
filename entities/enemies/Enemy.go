@@ -1,50 +1,29 @@
-package entities
+package enemies
 
 import (
+	"golang-game/config"
+	"golang-game/utils"
 	"image"
-	"log"
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-
-	"golang-game/config"
-	"golang-game/utils"
 )
 
 type Enemy struct {
-    x, y     float32
-    vx, vy   float32
+	x, y float32
+    vx, vy float32
 	size int
 	image *ebiten.Image
-	frameIdx int
 	hp int
+	frameIdx int
 	tintDuration int
 }
 
 
-func CreateEnemy() *Enemy {
-
-	img, _, err := ebitenutil.NewImageFromFile("assets/player2.png")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return &Enemy{
-		x: utils.RandFloat32(0, float32(config.S_WIDTH)),
-		y: utils.RandFloat32(0, float32(config.S_HEIGHT)),
-		size: 39,
-		image: img,
-		hp: 5,
-	}
-}
-
-
-func (e *Enemy) draw(screen *ebiten.Image) {
-
+func (e *Enemy) Draw(screen *ebiten.Image) {
 	utils.DrawDebugBorder(screen, e.x, e.y, float32(e.size), float32(e.size))
 	if (config.DISABLE_DRAW) { return }
-
+	//
 	frameWidth := 32
 	frameHeight := 32
 	// cropping rect for the current frame
@@ -70,10 +49,9 @@ func (e *Enemy) draw(screen *ebiten.Image) {
 	screen.DrawImage(frame, opts)
 }
 
-func (e *Enemy) update(player *Player) {
-
-	playerX := player.X
-	playerY := player.Y
+func (e *Enemy) Update(x, y float32) {
+	playerX := x
+	playerY := y
 
 	const friction = 0.95
 
@@ -120,11 +98,49 @@ func (e *Enemy) update(player *Player) {
 	}
 }
 
-// apply velocity to position from damage source
-func (e *Enemy) takeDamage(vx, vy float32) {
+func (e *Enemy) IsDead() bool {
+	return e.hp <= 0
+}
+
+func (e *Enemy) Respawn() {
+	e.x = utils.RandFloat32(0, float32(config.S_WIDTH))
+	e.y = utils.RandFloat32(0, float32(config.S_HEIGHT))
+	e.hp = 10
+}
+
+func (e *Enemy) GetPosition() (float32, float32) {
+	return e.x, e.y
+}
+
+func (e *Enemy) GetSize() int {
+	return e.size
+}
+
+func (e *Enemy) TakeDamage(vx, vy float32) {
 	e.hp--
 	// apply a little knockback
 	e.vx += vx
 	e.vy += vy
 	e.tintDuration = 5
 }
+
+type EnemyInterface interface {
+	Draw(screen *ebiten.Image)
+	Update(float32, float32)
+	IsDead() bool
+	Respawn()
+	GetPosition() (float32, float32)
+	GetSize() int
+	TakeDamage(float32, float32)
+}
+
+
+func CreateEnemies() []EnemyInterface {
+	enemies := []EnemyInterface{}
+	zombie := CreateZombie()
+	enemies = append(enemies, zombie)
+	return enemies
+}
+
+
+

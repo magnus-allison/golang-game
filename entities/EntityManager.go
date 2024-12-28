@@ -2,7 +2,7 @@ package entities
 
 import (
 	"golang-game/config"
-	"golang-game/utils"
+	"golang-game/entities/enemies"
 	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -12,7 +12,7 @@ import (
 
 type EntityManager struct {
 	Player *Player
-	Enemies []*Enemy
+	Enemies []enemies.EnemyInterface
 	Projectiles []*Projectile
 	PowerUps []*PowerUp
 }
@@ -26,16 +26,10 @@ func CreateEntityManager() *EntityManager {
 	player := CreatePlayer()
 	player.Respawn()
 
-	enemies := []*Enemy{}
-	enemyCount := 12
-	for i := 0; i < enemyCount; i++ {
-		enemies = append(enemies, CreateEnemy())
-	}
-
 	return &EntityManager{
 		PowerUps: powerUps,
 		Player: player,
-		Enemies: enemies,
+		Enemies: enemies.CreateEnemies(),
 	}
 }
 
@@ -44,7 +38,7 @@ func (em *EntityManager) UpdateEntities() {
 		p.update()
 	}
 	for _, e := range em.Enemies {
-		e.update(em.Player)
+		e.Update(em.Player.X, em.Player.Y)
 	}
 
 	// handle player shooting
@@ -65,7 +59,7 @@ func (em *EntityManager) DrawEntities(screen *ebiten.Image) {
 		p.draw(screen)
 	}
 	for _, e := range em.Enemies {
-		e.draw(screen)
+		e.Draw(screen)
 	}
 	for _, p := range em.Projectiles {
 		p.draw(screen)
@@ -91,10 +85,8 @@ func (em *EntityManager) DeleteProjectiles() {
 
 func (em *EntityManager) CheckForDeadEnemies(gs interface { IncrementScore() }) {
 	for _, e := range em.Enemies {
-		if (e.hp <= 0) {
-			e.x = utils.RandFloat32(0, float32(config.S_WIDTH))
-			e.y = utils.RandFloat32(0, float32(config.S_HEIGHT))
-			e.hp = 10
+		if e.IsDead() {
+			e.Respawn()
 			gs.IncrementScore()
 		}
 	}
